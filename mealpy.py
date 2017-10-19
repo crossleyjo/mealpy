@@ -1,3 +1,5 @@
+#!/usr/bin/env python2.7
+
 import getpass
 import json
 import requests
@@ -30,9 +32,11 @@ class MealPal(object):
         self.cookies = None
         self.cities = None
         self.schedules = None
+    print "MealPal object initialized"
 
     def login(self, username, password):
         data = {'username': username, 'password': password}
+        print "Trying to login...\n" 
         r = requests.post(
             LOGIN_URL, data=json.dumps(data), headers=self.headers)
         self.cookies = r.cookies
@@ -62,7 +66,7 @@ class MealPal(object):
             self, restaurant_name, city_name=None, city_id=None):
         if not self.schedules:
             self.get_schedules(city_name, city_id)
-        return filter(lambda x: x['restaurant']['name'] == restaurant_name,
+        return filter(lambda x: x['restaurant']['name'].find(restaurant_name) > -1,
                       self.schedules)[0]
 
     def get_schedule_by_meal_name(
@@ -113,7 +117,7 @@ print "Enter password: "
 password = getpass.getpass()
 
 
-@scheduler.scheduled_job('cron', hour=17, minute=00, second=00)
+@scheduler.scheduled_job('cron', hour=16, minute=59, second=56)
 def execute_reserve_meal():
     mp = MealPal()
 
@@ -130,8 +134,8 @@ def execute_reserve_meal():
     while True:
         try:
             status_code = mp.reserve_meal(
-                '12:15pm-12:30pm',
-                restaurant_name='Coast Poke Counter - Battery St.',
+                '12:30pm-12:45pm',
+                restaurant_name='Tender Green',
                 city_name='San Francisco')
             if status_code == 200:
                 print 'Reservation success!'
@@ -143,4 +147,6 @@ def execute_reserve_meal():
             print "Retrying..."
             time.sleep(1)
 
-scheduler.start()
+if __name__ == "__main__" :
+    #execute_reserve_meal()
+    scheduler.start()
